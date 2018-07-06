@@ -1,0 +1,413 @@
+#!/usr/bin/php
+<?php
+define('EXIT_OK', 0);
+define('EXIT_CMDLINE', 1);
+define('EXIT_IO', 2);
+define('EXIT_EXEC', 3);
+
+$cwd = getcwd();
+
+$g_cmdline_options = [
+	'magic_prefix' => '%',
+	'keep_workdir' => false,
+	'rounds' => 1,
+	'dry_run' => false,
+	'php_only' => false,
+	'separate_mode' => false,
+	'tex_file_names' => [],
+	'tex_file_basenames' => []
+];
+
+$tex_file_nr = parse_cmdline();
+
+$magic_latex_cmd			= '^\\s*' 						. '%'. $g_cmdline_options['magic_prefix'] . '#';
+$magic_php_line				= '^\\s*' 						. '%'. $g_cmdline_options['magic_prefix'] . '!';
+$magic_tex_line				= '^\\s*' 						. '%'. $g_cmdline_options['magic_prefix'] . '=';
+$magic_php_block_begin		= '^\\s*(?:\\\\iffalse)?\\s*'	. '%'. $g_cmdline_options['magic_prefix'] . '{';
+$magic_php_block_end		= '^\\s*(?:\\\\fi)?\\s*' 		. '%'. $g_cmdline_options['magic_prefix'] . '}';
+$magic_php_heredoc_begin	= '^\\s*(?:\\\\iffalse)?\\s*'	. '%'. $g_cmdline_options['magic_prefix'] . '<<<';
+$magic_php_heredoc_end		= '^\\s*(?:\\\\fi)?\\s*'		. '%'. $g_cmdline_options['magic_prefix'] . '>>>';
+
+$workdir = prepare_workdir();
+
+if ($g_cmdline_options['separate_mode']) {
+	for ($i=0; $i<$tex_file_nr; $i++) {
+		$latex_cmds = [];
+		clean_workdir();
+		create_tex($i);
+		run_latex($i);
+	}
+} else {
+	$latex_cmds = [];
+	for ($i=0; $i<$tex_file_nr; $i++)
+		create_tex($i);
+	run_latex(0);
+}
+
+exit(EXIT_OK);
+
+function create_tex($i)
+{
+	global $g_cmdline_options;
+	global $workdir;
+
+	$tex_file_name = $g_cmdline_options['tex_file_names'][$i];
+	$tex_file_basename = $g_cmdline_options['tex_file_basenames'][$i];
+	do {
+		$tmp_php_prg = create_php($tex_file_name, $tex_file_basename);
+		if ($g_cmdline_options['php_only']) {
+			file_put_contents("php://stdout", $tmp_php_prg);
+			break;
+		}
+		if (file_put_contents("$workdir/$tex_file_basename.php", $tmp_php_prg) === false) {
+			errmsg(EXIT_IO, "Cannot save temporary PHP file.");
+			break;
+		}
+		if (system("php '$workdir/$tex_file_basename.php' >'$workdir/$tex_file_basename' 2>'$workdir/$tex_file_basename.err'") != 0) {
+			errmsg(EXIT_EXEC, "Cannot run temporary PHP file.");
+			break;
+		}
+		if (filesize("$workdir/$tex_file_basename.err") > 0) {
+			readfile("$workdir/$tex_file_basename.err");
+			errmsg(EXIT_EXEC, null);
+			break;
+		}
+	} while (false);
+}
+
+function scan_php_block(&$lines, $nr, $i, $filebasename)
+{
+	global $magic_php_block_end;
+
+	$php_code = array();
+	while ($i < $nr) {
+		$s = rtrim($lines[$i++]);
+		if (preg_match("/$magic_php_block_end/", $s) > 0)
+			break;
+		list ($type, $text) = parse_single_line($s, $filebasename, 'p');
+		if ($type != '%')
+			$php_code[] = $text;
+	}
+	return array($i, $php_code);
+}
+
+function scan_heredoc_block(&$lines, $nr, $i, $filebasename, $heredoc_type)
+{
+	global $magic_php_heredoc_end;
+
+	$php_code = array();
+	$pars = array();
+	$heredoc_text = array();
+	while ($i < $nr) {
+		$s = rtrim($lines[$i++]);
+		if (preg_match("/$magic_php_heredoc_end/", $s) > 0) {
+			if (isset($heredoc_text[0])) {
+				$pars[] = $heredoc_text;
+				$heredoc_text = array();
+			}
+			break;
+		}
+		list($type, $text) = parse_single_line($s, $filebasename, 'd');
+		if ($type == '%') {
+			// ignore
+		} elseif ($type == 'p') {
+			$php_code[] = $text;
+		} else {
+			$text = rtrim($text);
+			if ($heredoc_type == '*' && preg_match("/^\\s*\$/", $text) > 0) {
+				if (isset($heredoc_text[0])) {
+					$pars[] = $heredoc_text;
+					$heredoc_text = array();
+				}
+			} else {
+				$heredoc_text[] = $text . "\n";
+			}
+		}
+	}
+	if (!isset($pars[0]))
+		$pars[] = '\n';
+	return array($i, $php_code, $pars);
+}
+
+function create_php($filename, $filebasename)
+{
+	global $magic_php_block_begin;
+	global $magic_php_heredoc_begin;
+
+	$lines = load_src_file($filename);
+
+	$prg = [
+		"<?php\n",
+		"require_once '" . __DIR__ . "/phplatex_lib.php';\n"
+	];
+
+	$nr = count($lines);
+	$i = 0;
+	while ($i < $nr) {
+		$s = rtrim($lines[$i]);
+		if (preg_match("/$magic_php_block_begin(?<code>.*)/", $s, $fields) > 0) {
+			$prg[] = $fields['code'] . "\n";
+			list ($i, $php_code) = scan_php_block($lines, $nr, $i + 1, $filebasename);
+			array_cat($prg, $php_code);
+		} elseif (preg_match("/$magic_php_heredoc_begin\\s*(?<type>\\*?)\\s*(?<var>[A-Za-z_]\\w*)(?<code>\\s+.*|\$)/", $s, $fields) > 0) {
+			$heredoc_type = $fields['type'];
+			$heredoc_var = $fields['var'];
+			list ($i, $php_code, $pars) = scan_heredoc_block($lines, $nr, $i + 1, $filebasename, $heredoc_type);
+			if ($heredoc_type == '*') {
+				$dn = count($pars);
+				for ($j=0; $j<$dn; $j++) {
+					$prg[] = "\${$heredoc_var}_{$j} = <<<{$heredoc_var}_{$j}_EOT\n";
+					array_cat($prg, $pars[$j]);
+					$prg[] = "{$heredoc_var}_{$j}_EOT;\n";
+				}
+				$prg[] = "\$$heredoc_var = [\n";
+				for ($j=0; $j<$dn; $j++)
+					$prg[] = "\${$heredoc_var}_{$j}" . (($j + 1 < $dn) ? ',' : '') . "\n";
+				$prg[] = "];\n";
+			} else {
+				$prg[] = "\${$heredoc_var} = <<<{$heredoc_var}_EOT\n";
+				array_cat($prg, $pars[0]);
+				$prg[] = "{$heredoc_var}_EOT;\n";
+			}
+			$prg[] = $fields['code'] . "\n";
+			array_cat($prg, $php_code);
+		} else {
+			list ($type, $text) = parse_single_line($s, $filebasename, 't');
+			if ($type != '%')
+				$prg[] = $text;
+			$i++;
+		}
+	}
+
+	return $prg;
+}
+
+function array_cat(&$a1, &$a2)
+{
+	foreach ($a2 as $s) $a1[] = $s;
+}
+
+function load_src_file($filename)
+{
+	if (!is_file($filename)) {
+		if (is_file($filename . ".ptx"))
+			$filename .= ".ptx";
+		elseif (is_file($filename . ".tex"))
+			$filename .= ".tex";
+		else
+			errmsg(EXIT_IO, "Cannot read $filename.");
+	}
+	$lines = file($filename);
+	if ($lines === false)
+		errmsg(EXIT_IO, "Cannot read $filename.");
+	return $lines;
+}
+
+function parse_single_line($s, $filebasename, $block_type)
+{
+	global $cwd;
+	global $latex_cmds;
+	global $magic_latex_cmd;
+	global $magic_php_line;
+	global $magic_tex_line;
+
+	$text = '';
+	$type = 'p';
+	if (preg_match("/%%=\\s*\$/", $s) > 0) {
+		// ignore lines ended with %%=
+	} elseif (preg_match("/$magic_tex_line(?<tex>.*)/", $s, $fields) > 0) {
+		$s = $fields['tex'];
+		$text = translate_text($s, true, $block_type) . "\n";
+		if ($block_type == 'd')
+			$type = 'd';
+	} elseif (preg_match("/$magic_php_line(?<php>.*)/", $s, $fields) > 0) {
+		$text = $fields['php'] . "\n";
+	} elseif (preg_match("/$magic_latex_cmd(?<cmd>.*)/", $s, $fields) > 0) {
+		$s = strtr($fields['cmd'], ['%TEXFILE%' => $filebasename, '%CWD%' => $cwd]);
+		$latex_cmds[] = $s . "\n";
+	} elseif (preg_match("/^\\s*%/", $s) > 0) {
+		$type = '%';
+	} else {
+		if ($block_type == 'p') {
+			$text = $s . "\n";
+		} elseif ($block_type == 't') {
+			$text = translate_text($s, true, $block_type) . "\n";
+		} else /* if ($block_type == 'd') */ {
+			$text = translate_text($s, false, $block_type) . "\n";
+			$type = 'd';
+		}
+	}
+	return array($type, $text);
+}
+
+function translate_text($s, $do_escape, $block_type)
+{
+	$t = '';
+	if ($block_type == 'd') {
+		while ($s != '') {
+			if (preg_match('/^(?<head>.*?)\\{<\\?(?<php>.*?)\\?>\\}(?<tail>.*)/', $s, $fields) > 0) {
+				$t .= $do_escape ? escape($fields['head']) : $fields['head'];
+				$t .= "{" . trim($fields['php']) . "}";
+				$s = $fields['tail'];
+			} else {
+				$t .= $do_escape ? escape($s) : $s;
+				$s = '';
+			}
+		}
+	} else {
+		while ($s != '') {
+			if (preg_match('/^(?<head>.*?)\\{<\\?(?<statement>(php)?)(?<php>.*?)\\?>\\}(?<tail>.*)/', $s, $fields) > 0) {
+				$t .= "echo \"" . ($do_escape ? escape($fields['head']) : $fields['head']) . "\";";
+				if ($fields['statement'] == 'php')
+					$t .= trim($fields['php']);
+				else
+					$t .= "echo \"{" . trim($fields['php']) . "}\";";
+				$s = $fields['tail'];
+			} else {
+				$t .= "echo \"" . ($do_escape ? escape($s) : $s) . "\";";
+				$s = '';
+			}
+		}
+		$t .= "echo \"\\n\";";
+	}
+	return $t;
+}
+
+function escape($s)
+{
+	return strtr($s, ['\\' => '\\\\', '$' => '\\$', '"' => '\\"', '\'' => '\\\'']);
+}
+
+function run_latex($default_idx)
+{
+	global $g_cmdline_options;
+	global $cwd, $workdir;
+	global $latex_cmds;
+
+	if (!$g_cmdline_options['php_only']) {
+		if (!chdir($workdir))
+			exit(EXIT_IO);
+		if ($g_cmdline_options['dry_run']) {
+			foreach ($g_cmdline_options['tex_file_basenames'] as $file) {
+				readfile($file);
+			}
+		} else {
+			if (!isset($latex_cmds[0]))
+				$latex_cmds[] = "xelatex -shell-escape \"{$g_cmdline_options['tex_file_basenames'][$default_idx]}\"\n";
+			$cmdfile = basename($workdir). ".sh";
+			file_put_contents($cmdfile, $latex_cmds);
+			$rounds = $g_cmdline_options['rounds'];
+			while ($rounds-- > 0) {
+				if (system("sh $cmdfile") != 0)
+					exit(EXIT_EXEC);
+			}
+			$pdfs = glob("*.pdf");
+			if (isset($pdfs[0])) {
+				if (system("mv *.pdf '$cwd' 2> /dev/null") != 0)
+					exit(EXIT_EXEC);
+			}
+		}
+		chdir($cwd);
+	}
+}
+
+function prepare_workdir()
+{
+	global $g_cmdline_options;
+	global $cwd;
+
+	$dir = "ptx-" . getmypid() . "-" . date("YmdHis");
+	if (!$g_cmdline_options['php_only']) {
+		if (!mkdir($dir))
+			errmsg(EXIT_IO, "Cannot create working directory.");
+		register_shutdown_function('shutdown_callback');
+	}
+	return "$cwd/$dir";
+}
+
+function clean_workdir()
+{
+	global $cwd, $workdir;
+
+	if (chdir($workdir)) {
+		system("rm -rf *");
+		chdir($cwd);
+	}
+}
+
+function shutdown_callback()
+{
+	global $g_cmdline_options;
+	global $cwd, $workdir;
+
+	chdir($cwd);
+	if (!$g_cmdline_options['keep_workdir']) {
+		system("rm -rf '$workdir'");
+	}
+}
+
+function parse_cmdline()
+{
+	global $g_cmdline_options;
+	global $argc, $argv;
+
+	for ($i=1; $i<$argc; $i++) {
+		$arg = $argv[$i];
+		if (substr($arg, 0, 1) == '-') {
+			$arg = substr($arg, 1);
+			if ($arg == 'k') {
+				$g_cmdline_options['keep_workdir'] = true;
+			} elseif ($arg == 'd') {
+				$g_cmdline_options['dry_run'] = true;
+			} elseif ($arg == 'p') {
+				$g_cmdline_options['php_only'] = true;
+			} elseif ($arg == 's') {
+				$g_cmdline_options['separate_mode'] = true;
+			} elseif ($arg == 'm') {
+				if ($i + 1 >= $argc)
+					usage("Magic prefix not specified.");
+				$g_cmdline_options['magic_prefix'] = $argv[++$i];
+				if (preg_match('/^[\w\-\%]+$/', $g_cmdline_options['magic_prefix']) <= 0)
+					usage("Magic prefix is not valid.");
+			} elseif ($arg == 'r') {
+				if ($i + 1 >= $argc)
+					usage("Rounds not specified.");
+				$g_cmdline_options['rounds'] = (int)$argv[++$i];
+				if ($g_cmdline_options['rounds'] < 1)
+					usage("Rounds is not valid");
+			} else {
+				usage("Unknown option -" . $arg . ".");
+			}
+		} else {
+			$g_cmdline_options['tex_file_names'][] = $argv[$i];
+			$g_cmdline_options['tex_file_basenames'][] = basename($argv[$i]);
+		}
+	}
+	$nr = count($g_cmdline_options['tex_file_names']);
+	if ($nr == 0)
+		usage("At least 1 tex file must be specified.");
+	return $nr;
+}
+
+function usage($msg = null)
+{
+	global $argv;
+	$prg = basename($argv[0]);
+	echo "Usage: $prg [options] texfile ...\n";
+	echo "Options\n";
+	echo "    -d              print generated tex content but do not compile\n";
+	echo "    -k              do not delete temporary working directory\n";
+	echo "    -m <alt_magic>  specify magic string, default is \"%\"\n";
+	echo "    -p              print PHP program but do not run\n";
+	echo "    -r <rounds>     rounds to run LaTeX command.\n";
+	echo "    -s              compile eah TeX file individually.\n";
+	echo "\n";
+	errmsg(EXIT_CMDLINE, $msg);
+}
+
+function errmsg($code, $msg)
+{
+	if ($msg != null)
+		echo "$msg\n\n";
+	exit($code);
+}

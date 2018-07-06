@@ -1,0 +1,27 @@
+% Misc utility macros.
+%
+% Version 1.0.0 (01-Jul-2018)
+%
+% Copyright (C) 2018 Sun Shouxiang <sunshouxiang@msn.com>
+
+\def\fileversion{1.0.0}
+\def\filedate{2018/07/01}
+\NeedsTeXFormat{LaTeX2e}[1995/06/01]
+\ProvidesPackage{xeutils}[\filedate\space\fileversion]
+
+\RequirePackage{ifxetex}\RequireXeTeX
+\RequirePackage{ifthen}
+
+\RequirePackage{calc}
+
+\newcommand{\bracket}[1]{[#1]}
+\newcommand\dq[1]{“#1”}
+\newcommand\kh[1]{\raisebox{0.25ex}{(}#1\raisebox{0.25ex}{)}}
+\newcommand\Kh[1]{\raisebox{0.25ex}{[}#1\raisebox{0.25ex}{]}}
+\newcommand\KH[1]{\raisebox{0.25ex}{\{}#1\raisebox{0.25ex}{\}}}
+
+\newcommand{\ifthen}[2]{\ifthenelse{#1}{#2}{}}
+
+\newcommand{\pts}[1]{\strip@pt\dimexpr #1*65536/\number\dimexpr 1pt}
+
+\endinput

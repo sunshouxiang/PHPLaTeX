@@ -1,0 +1,75 @@
+% Load all usable packages.
+%
+% Version 1.0.0 (01-Jul-2018)
+%
+% Copyright (C) 2018 Sun Shouxiang <sunshouxiang@msn.com>
+
+\def\fileversion{1.0.0}
+\def\filedate{2018/07/01}
+\NeedsTeXFormat{LaTeX2e}[1995/06/01]
+\ProvidesPackage{xepkgs}[\filedate\space\fileversion]
+
+\RequirePackage{ifxetex}\RequireXeTeX
+\RequirePackage{xkeyval}
+\RequirePackage{ifthen}
+
+\def\@pkgs@font@type{truetype}
+\def\@pkgs@py@mode{math}
+\def\@pkgs@href@on{no}
+\def\@pkgs@titlesec@on{no}
+
+\DeclareOptionX{font}[]{
+\ifthenelse{\equal{#1}{truetype}}{\def\@pkgs@font@type{#1}}{
+\ifthenelse{\equal{#1}{opentype}}{\def\@pkgs@font@type{#1}}{
+\PackageWarning{xepkgs}{Unkown font type #1}
+}}
+}
+\DeclareOptionX{pinyin}[]{
+\ifthenelse{\equal{#1}{math}}{\def\@pkgs@py@mode{#1}}{
+\ifthenelse{\equal{#1}{text}}{\def\@pkgs@py@mode{#1}}{
+\ifthenelse{\equal{#1}{unicode}}{\def\@pkgs@py@mode{#1}}{
+\PackageWarning{xepkgs}{Unkown pinyin mode #1}
+}}}
+}
+\DeclareOptionX{href}[]{
+\ifthenelse{\equal{#1}{yes}}{\def\@pkgs@href@on{#1}}{
+\ifthenelse{\equal{#1}{no}}{\def\@pkgs@href@on{#1}}{
+\PackageWarning{xepkgs}{Unkown href switch #1}
+}}
+}
+\DeclareOptionX{titlesec}[]{
+\ifthenelse{\equal{#1}{yes}}{\def\@pkgs@titlesec@on{#1}}{
+\ifthenelse{\equal{#1}{no}}{\def\@pkgs@titlesec@on{#1}}{
+\PackageWarning{xepkgs}{Unkown titlesec switch #1}
+}}
+}
+\ProcessOptionsX
+
+\RequirePackage{xcolor}
+\RequirePackage{fontspec,xunicode,xltxtra}
+\RequirePackage[boldfont,slantfont]{xeCJK}
+\RequirePackage{CJKnumb}
+\RequirePackage{CJKpunct}
+
+\RequirePackage{xeutils}
+\RequirePackage{xeshell}
+\RequirePackage[\@pkgs@font@type]{xefonts}
+\RequirePackage[mode=\@pkgs@py@mode]{xepy}
+\ifthenelse{\equal{\@pkgs@href@on}{yes}}{
+\RequirePackage[colorlinks=true,citecolor=blue,linkcolor=blue,pdfstartview=FitH]{hyperref}
+}{}
+\ifthenelse{\equal{\@pkgs@titlesec@on}{yes}}{
+\RequirePackage{titlesec}
+% begin bug fix of titlesec
+\RequirePackage{etoolbox}
+\patchcmd{\ttlh@hang}{\parindent\z@}{\parindent\z@\leavevmode}{}{}
+\patchcmd{\ttlh@hang}{\noindent}{}{}{}
+% end bug fix of titlesec
+}{}
+
+\RequirePackage{zhulem}
+\RequirePackage{gezhu}
+
+\punctstyle{quanjiao}
+
+\endinput

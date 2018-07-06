@@ -1,0 +1,30 @@
+#!/usr/bin/php
+<?php
+require_once __DIR__ . '/phplatex_lib.php';
+
+$grid = false;
+$note_spec = 'footnote';
+$file = '';
+
+for ($i=1; $i<$argc; $i++) {
+	$arg = $argv[$i];
+	if (substr($arg, 0, 1) == '-') {
+		$arg = substr($arg, 1);
+		if ($arg == 'g') {
+			$grid = true;
+		} elseif ($arg == 'n' && $i + 1 < $argc) {
+			$note_spec = $argv[++$i];
+		} else {
+			die("Unkown option: -$arg");
+		}
+	} else {
+		$file = $arg;
+	}
+}
+
+if ($file != '') {
+	$text = file_get_contents($file);
+	print_zy($text, $grid, $note_spec);
+}
+
+exit(0);

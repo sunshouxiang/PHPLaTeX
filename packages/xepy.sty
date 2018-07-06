@@ -1,0 +1,876 @@
+% Input Chinese pinyin.
+%
+% Version 1.0.0 (01-Jul-2018)
+%
+% Copyright (C) 2018 Sun Shouxiang <sunshouxiang@msn.com>
+
+\def\fileversion{1.0.0}
+\def\filedate{2018/07/01}
+\NeedsTeXFormat{LaTeX2e}[1995/06/01]
+\ProvidesPackage{xepy}[\filedate\space\fileversion]
+
+\RequirePackage{ifxetex}\RequireXeTeX
+\RequirePackage{xkeyval}
+\RequirePackage{ifthen}
+
+\def\@py@font@changeable{y}
+\def\@py@mode{math}
+
+\DeclareOptionX{mode}[]{
+\ifthenelse{\equal{#1}{unicode}}{\def\@py@mode{#1}}{
+\ifthenelse{\equal{#1}{math}}{\def\@py@mode{#1}}{
+\ifthenelse{\equal{#1}{text}}{\def\@py@mode{#1}}{
+\PackageWarning{xepy}{Unkown mode #1}
+}}}
+}
+\ProcessOptionsX
+
+\RequirePackage{amsmath}
+\RequirePackage{xstring}
+\RequirePackage{tikz}
+
+\ifthenelse{\equal{\@py@mode}{unicode}}{
+	\def\@py@font{\songti}\def\@py@fontname{songti}
+	\def\@py@a#1{\ifthenelse{\equal{#1}{1}}{ā}{\ifthenelse{\equal{#1}{2}}{á}{\ifthenelse{\equal{#1}{3}}{ǎ}{\ifthenelse{\equal{#1}{4}}{à}{ɑ}}}}}
+	\def\@py@o#1{\ifthenelse{\equal{#1}{1}}{ō}{\ifthenelse{\equal{#1}{2}}{ó}{\ifthenelse{\equal{#1}{3}}{ǒ}{\ifthenelse{\equal{#1}{4}}{ò}{o}}}}}
+	\def\@py@e#1{\ifthenelse{\equal{#1}{1}}{ē}{\ifthenelse{\equal{#1}{2}}{é}{\ifthenelse{\equal{#1}{3}}{ě}{\ifthenelse{\equal{#1}{4}}{è}{e}}}}}
+	\def\@py@i#1{\ifthenelse{\equal{#1}{1}}{ī}{\ifthenelse{\equal{#1}{2}}{í}{\ifthenelse{\equal{#1}{3}}{ǐ}{\ifthenelse{\equal{#1}{4}}{ì}{i}}}}}
+	\def\@py@u#1{\ifthenelse{\equal{#1}{1}}{ū}{\ifthenelse{\equal{#1}{2}}{ú}{\ifthenelse{\equal{#1}{3}}{ǔ}{\ifthenelse{\equal{#1}{4}}{ù}{u}}}}}
+	\def\@py@v#1{\ifthenelse{\equal{#1}{1}}{ǖ}{\ifthenelse{\equal{#1}{2}}{ǘ}{\ifthenelse{\equal{#1}{3}}{ǚ}{\ifthenelse{\equal{#1}{4}}{ǜ}{ü}}}}}
+}{
+	\ifthenelse{\equal{\@py@mode}{text}}{
+	\def\@py@font{\simpofont}\def\@py@fontname{simpofont}
+	\def\@py@yi#1{\={#1}}
+	\def\@py@er#1{\'{#1}}
+	\def\@py@sn#1{\v{#1}}
+	\def\@py@si#1{\`{#1}}
+	\def\@py@yu{\"{u}}
+	}{\ifthenelse{\equal{\@py@mode}{math}}{
+	\def\@py@font{\simpofont}\def\@py@fontname{simpofont}
+	\def\@py@yi#1{$\bar{\mbox{#1}}$}
+	\def\@py@er#1{$\acute{\mbox{#1}}$}
+	\def\@py@sn#1{$\check{\mbox{#1}}$}
+	\def\@py@si#1{$\grave{\mbox{#1}}$}
+	\def\@py@yu{$\ddot{\mbox{u}}$}
+	}{
+	\PackageError{xepy}{bad mode}{\@py@mode}
+	}}
+	\def\@py@a#1{\ifthenelse{\equal{#1}{1}}{\@py@yi{a}}{\ifthenelse{\equal{#1}{2}}{\@py@er{a}}{\ifthenelse{\equal{#1}{3}}{\@py@sn{a}}{\ifthenelse{\equal{#1}{4}}{\@py@si{a}}{a}}}}}
+	\def\@py@o#1{\ifthenelse{\equal{#1}{1}}{\@py@yi{o}}{\ifthenelse{\equal{#1}{2}}{\@py@er{o}}{\ifthenelse{\equal{#1}{3}}{\@py@sn{o}}{\ifthenelse{\equal{#1}{4}}{\@py@si{o}}{o}}}}}
+	\def\@py@e#1{\ifthenelse{\equal{#1}{1}}{\@py@yi{e}}{\ifthenelse{\equal{#1}{2}}{\@py@er{e}}{\ifthenelse{\equal{#1}{3}}{\@py@sn{e}}{\ifthenelse{\equal{#1}{4}}{\@py@si{e}}{e}}}}}
+	\ifthenelse{\equal{\@py@mode}{text}}{
+	\def\@py@i#1{\ifthenelse{\equal{#1}{1}}{\@py@yi{\i}}{\ifthenelse{\equal{#1}{2}}{\@py@er{\i}}{\ifthenelse{\equal{#1}{3}}{\@py@sn{\i}}{\ifthenelse{\equal{#1}{4}}{\@py@si{\i}}{i}}}}}
+	}{
+	\def\@py@i#1{\ifthenelse{\equal{#1}{1}}{\@py@yi{\mbox{\i}}}{\ifthenelse{\equal{#1}{2}}{\hspace{-0.2ex}\@py@er{\mbox{{\tiny~}\i}}}{\ifthenelse{\equal{#1}{3}}{\@py@sn{\mbox{\i}}}{\ifthenelse{\equal{#1}{4}}{\@py@si{\mbox{\i\tiny~}}\hspace{-0.2ex}}{i}}}}}
+	}
+	\def\@py@u#1{\ifthenelse{\equal{#1}{1}}{\@py@yi{u}}{\ifthenelse{\equal{#1}{2}}{\@py@er{u}}{\ifthenelse{\equal{#1}{3}}{\@py@sn{u}}{\ifthenelse{\equal{#1}{4}}{\@py@si{u}}{u}}}}}
+	\def\@py@v#1{\ifthenelse{\equal{#1}{1}}{\@py@yi{\@py@yu}}{\ifthenelse{\equal{#1}{2}}{\@py@er{\@py@yu}}{\ifthenelse{\equal{#1}{3}}{\@py@sn{\@py@yu}}{\ifthenelse{\equal{#1}{4}}{\@py@si{\@py@yu}}{\@py@yu}}}}}
+}
+
+\def\@py@decl#1#2#3#4{%
+	\expandafter\def\csname @py@tone@#1\endcsname##1{{\@py@font\@py@fontsize #2\@py@vowel{#3}{##1}{#4}}}%
+	\expandafter\def\csname @py@lite@#1\endcsname{{\@py@font\@py@fontsize #2\@py@vowel{#3}{0}{#4}}}%
+	\expandafter\def\csname py#1\endcsname{%
+		\@ifnextchar 1{%
+			\csname @py@tone@#1\endcsname%
+		}{%
+		\@ifnextchar 2{%
+			\csname @py@tone@#1\endcsname%
+		}{%
+		\@ifnextchar 3{%
+			\csname @py@tone@#1\endcsname%
+		}{%
+		\@ifnextchar 4{%
+			\csname @py@tone@#1\endcsname%
+		}{%
+			\csname @py@lite@#1\endcsname%
+		}}}}%
+	}%
+}
+
+\@py@decl{a}{}{a}{}
+\@py@decl{ai}{}{a}{i}
+\@py@decl{an}{}{a}{n}
+\@py@decl{ang}{}{a}{ng}
+\@py@decl{ao}{}{a}{o}
+
+\@py@decl{ba}{b}{a}{}
+\@py@decl{bai}{b}{a}{i}
+\@py@decl{ban}{b}{a}{n}
+\@py@decl{bang}{b}{a}{ng}
+\@py@decl{bao}{b}{a}{o}
+\@py@decl{bei}{b}{e}{i}
+\@py@decl{ben}{b}{e}{n}
+\@py@decl{beng}{b}{e}{ng}
+\@py@decl{bi}{b}{i}{}
+\@py@decl{bian}{bi}{a}{n}
+\@py@decl{biao}{bi}{a}{o}
+\@py@decl{bie}{bi}{e}{}
+\@py@decl{bin}{b}{i}{n}
+\@py@decl{bing}{b}{i}{ng}
+\@py@decl{bo}{b}{o}{}
+\@py@decl{bu}{b}{u}{}
+
+\@py@decl{ca}{c}{a}{}
+\@py@decl{cai}{c}{a}{i}
+\@py@decl{can}{c}{a}{n}
+\@py@decl{cang}{c}{a}{ng}
+\@py@decl{cao}{c}{a}{o}
+\@py@decl{ce}{c}{e}{}
+\@py@decl{cen}{c}{e}{n}
+\@py@decl{ceng}{c}{e}{ng}
+\@py@decl{cha}{ch}{a}{}
+\@py@decl{chai}{ch}{a}{i}
+\@py@decl{chan}{ch}{a}{n}
+\@py@decl{chang}{ch}{a}{ng}
+\@py@decl{chao}{ch}{a}{o}
+\@py@decl{che}{ch}{e}{}
+\@py@decl{chen}{ch}{e}{n}
+\@py@decl{cheng}{ch}{e}{ng}
+\@py@decl{chi}{ch}{i}{}
+\@py@decl{chong}{ch}{o}{ng}
+\@py@decl{chou}{ch}{o}{u}
+\@py@decl{chu}{ch}{u}{}
+\@py@decl{chua}{chu}{a}{}
+\@py@decl{chuai}{chu}{a}{i}
+\@py@decl{chuan}{chu}{a}{n}
+\@py@decl{chuang}{chu}{a}{ng}
+\@py@decl{chui}{chu}{i}{}
+\@py@decl{chun}{ch}{u}{n}
+\@py@decl{chuo}{chu}{o}{}
+\@py@decl{ci}{c}{i}{}
+\@py@decl{cong}{c}{o}{ng}
+\@py@decl{cou}{c}{o}{u}
+\@py@decl{cu}{c}{u}{}
+\@py@decl{cuan}{cu}{a}{n}
+\@py@decl{cui}{cu}{i}{}
+\@py@decl{cun}{c}{u}{n}
+\@py@decl{cuo}{cu}{o}{}
+
+\@py@decl{da}{d}{a}{}
+\@py@decl{dai}{d}{a}{i}
+\@py@decl{dan}{d}{a}{n}
+\@py@decl{dang}{d}{a}{ng}
+\@py@decl{dao}{d}{a}{o}
+\@py@decl{de}{d}{e}{}
+\@py@decl{dei}{d}{e}{i}
+\@py@decl{den}{d}{e}{n}
+\@py@decl{deng}{d}{e}{ng}
+\@py@decl{di}{d}{i}{}
+\@py@decl{dian}{di}{a}{n}
+\@py@decl{diao}{di}{a}{o}
+\@py@decl{die}{di}{e}{}
+\@py@decl{ding}{d}{i}{ng}
+\@py@decl{diu}{di}{u}{}
+\@py@decl{dong}{d}{o}{ng}
+\@py@decl{dou}{d}{o}{u}
+\@py@decl{du}{d}{u}{}
+\@py@decl{duan}{du}{a}{n}
+\@py@decl{dui}{du}{i}{}
+\@py@decl{dun}{d}{u}{n}
+\@py@decl{duo}{du}{o}{}
+
+\@py@decl{e}{}{e}{}
+\@py@decl{ei}{}{e}{i}
+\@py@decl{en}{}{e}{n}
+\@py@decl{eng}{}{e}{ng}
+\@py@decl{er}{}{e}{r}
+
+\@py@decl{fa}{f}{a}{}
+\@py@decl{fan}{f}{a}{n}
+\@py@decl{fang}{f}{a}{ng}
+\@py@decl{fei}{f}{e}{i}
+\@py@decl{fen}{f}{e}{n}
+\@py@decl{feng}{f}{e}{ng}
+\@py@decl{fo}{f}{o}{}
+\@py@decl{fou}{f}{o}{u}
+\@py@decl{fu}{f}{u}{}
+
+\@py@decl{ga}{g}{a}{}
+\@py@decl{gai}{g}{a}{i}
+\@py@decl{gan}{g}{a}{n}
+\@py@decl{gang}{g}{a}{ng}
+\@py@decl{gao}{g}{a}{o}
+\@py@decl{ge}{g}{e}{}
+\@py@decl{gei}{g}{e}{i}
+\@py@decl{gen}{g}{e}{n}
+\@py@decl{geng}{g}{e}{ng}
+\@py@decl{gong}{g}{o}{ng}
+\@py@decl{gou}{g}{o}{u}
+\@py@decl{gu}{g}{u}{}
+\@py@decl{gua}{g{}u}{a}{}
+\@py@decl{guai}{g{}u}{a}{i}
+\@py@decl{guan}{g{}u}{a}{n}
+\@py@decl{guang}{g{}u}{a}{ng}
+\@py@decl{gui}{g{}u}{i}{}
+\@py@decl{gun}{g}{u}{n}
+\@py@decl{guo}{g{}u}{o}{}
+
+\@py@decl{ha}{h}{a}{}
+\@py@decl{hai}{h}{a}{i}
+\@py@decl{han}{h}{a}{n}
+\@py@decl{hang}{h}{a}{ng}
+\@py@decl{hao}{h}{a}{o}
+\@py@decl{he}{h}{e}{}
+\@py@decl{hei}{h}{e}{i}
+\@py@decl{hen}{h}{e}{n}
+\@py@decl{heng}{h}{e}{ng}
+\@py@decl{hong}{h}{o}{ng}
+\@py@decl{hou}{h}{o}{u}
+\@py@decl{hu}{h}{u}{}
+\@py@decl{hua}{hu}{a}{}
+\@py@decl{huai}{hu}{a}{i}
+\@py@decl{huan}{hu}{a}{n}
+\@py@decl{huang}{hu}{a}{ng}
+\@py@decl{hui}{hu}{i}{}
+\@py@decl{hun}{h}{u}{n}
+\@py@decl{huo}{hu}{o}{}
+
+\@py@decl{ji}{j}{i}{}
+\@py@decl{jia}{ji}{a}{}
+\@py@decl{jian}{ji}{a}{n}
+\@py@decl{jiang}{ji}{a}{ng}
+\@py@decl{jiao}{ji}{a}{o}
+\@py@decl{jie}{ji}{e}{}
+\@py@decl{jin}{j}{i}{n}
+\@py@decl{jing}{j}{i}{ng}
+\@py@decl{jiong}{ji}{o}{ng}
+\@py@decl{jiu}{ji}{u}{}
+\@py@decl{ju}{j}{u}{}
+\@py@decl{juan}{ju}{a}{n}
+\@py@decl{jue}{ju}{e}{}
+\@py@decl{jun}{j}{u}{n}
+
+\@py@decl{ka}{k}{a}{}
+\@py@decl{kai}{k}{a}{i}
+\@py@decl{kan}{k}{a}{n}
+\@py@decl{kang}{k}{a}{ng}
+\@py@decl{kao}{k}{a}{o}
+\@py@decl{ke}{k}{e}{}
+\@py@decl{kei}{k}{e}{i}
+\@py@decl{ken}{k}{e}{n}
+\@py@decl{keng}{k}{e}{ng}
+\@py@decl{kong}{k}{o}{ng}
+\@py@decl{kou}{k}{o}{u}
+\@py@decl{ku}{k}{u}{}
+\@py@decl{kua}{ku}{a}{}
+\@py@decl{kuai}{ku}{a}{i}
+\@py@decl{kuan}{ku}{a}{n}
+\@py@decl{kuang}{ku}{a}{ng}
+\@py@decl{kui}{ku}{i}{}
+\@py@decl{kun}{k}{u}{n}
+\@py@decl{kuo}{ku}{o}{}
+
+\@py@decl{la}{l}{a}{}
+\@py@decl{lai}{l}{a}{i}
+\@py@decl{lan}{l}{a}{n}
+\@py@decl{lang}{l}{a}{ng}
+\@py@decl{lao}{l}{a}{o}
+\@py@decl{le}{l}{e}{}
+\@py@decl{lei}{l}{e}{i}
+\@py@decl{leng}{l}{e}{ng}
+\@py@decl{li}{l}{i}{}
+\@py@decl{lia}{li}{a}{}
+\@py@decl{lian}{li}{a}{n}
+\@py@decl{liang}{li}{a}{ng}
+\@py@decl{liao}{li}{a}{o}
+\@py@decl{lie}{li}{e}{}
+\@py@decl{lin}{l}{i}{n}
+\@py@decl{ling}{l}{i}{ng}
+\@py@decl{liu}{li}{u}{}
+\@py@decl{long}{l}{o}{ng}
+\@py@decl{lou}{l}{o}{u}
+\@py@decl{lu}{l}{u}{}
+\@py@decl{luan}{lu}{a}{n}
+\@py@decl{lun}{l}{u}{n}
+\@py@decl{luo}{lu}{o}{}
+\@py@decl{lv}{l}{v}{}
+\@py@decl{lve}{l\@py@v{}}{e}{}
+
+\@py@decl{ma}{m}{a}{}
+\@py@decl{mai}{m}{a}{i}
+\@py@decl{man}{m}{a}{n}
+\@py@decl{mang}{m}{a}{ng}
+\@py@decl{mao}{m}{a}{o}
+\@py@decl{me}{m}{e}{}
+\@py@decl{mei}{m}{e}{i}
+\@py@decl{men}{m}{e}{n}
+\@py@decl{meng}{m}{e}{ng}
+\@py@decl{mi}{m}{i}{}
+\@py@decl{mian}{mi}{a}{n}
+\@py@decl{miao}{mi}{a}{o}
+\@py@decl{mie}{mi}{e}{}
+\@py@decl{min}{m}{i}{n}
+\@py@decl{ming}{m}{i}{ng}
+\@py@decl{miu}{mi}{u}{}
+\@py@decl{mo}{m}{o}{}
+\@py@decl{mou}{m}{o}{u}
+\@py@decl{mu}{m}{u}{}
+
+\@py@decl{na}{n}{a}{}
+\@py@decl{nai}{n}{a}{i}
+\@py@decl{nan}{n}{a}{n}
+\@py@decl{nang}{n}{a}{ng}
+\@py@decl{nao}{n}{a}{o}
+\@py@decl{ne}{n}{e}{}
+\@py@decl{nei}{n}{e}{i}
+\@py@decl{nen}{n}{e}{n}
+\@py@decl{neng}{n}{e}{ng}
+\@py@decl{ni}{n}{i}{}
+\@py@decl{nian}{ni}{a}{n}
+\@py@decl{niang}{ni}{a}{ng}
+\@py@decl{niao}{ni}{a}{o}
+\@py@decl{nie}{ni}{e}{}
+\@py@decl{nin}{n}{i}{n}
+\@py@decl{ning}{n}{i}{ng}
+\@py@decl{niu}{ni}{u}{}
+\@py@decl{nong}{n}{o}{ng}
+\@py@decl{nou}{n}{o}{u}
+\@py@decl{nu}{n}{u}{}
+\@py@decl{nuan}{nu}{a}{n}
+\@py@decl{nuo}{nu}{o}{}
+\@py@decl{nv}{n}{v}{}
+\@py@decl{nve}{n\@py@v{}}{e}{}
+
+\@py@decl{o}{}{o}{}
+\@py@decl{ou}{}{o}{u}
+
+\@py@decl{pa}{p}{a}{}
+\@py@decl{pai}{p}{a}{i}
+\@py@decl{pan}{p}{a}{n}
+\@py@decl{pang}{p}{a}{ng}
+\@py@decl{pao}{p}{a}{o}
+\@py@decl{pei}{p}{e}{i}
+\@py@decl{pen}{p}{e}{n}
+\@py@decl{peng}{p}{e}{ng}
+\@py@decl{pi}{p}{i}{}
+\@py@decl{pian}{pi}{a}{n}
+\@py@decl{piao}{pi}{a}{o}
+\@py@decl{pie}{pi}{e}{}
+\@py@decl{pin}{p}{i}{n}
+\@py@decl{ping}{p}{i}{ng}
+\@py@decl{po}{p}{o}{}
+\@py@decl{pou}{p}{o}{u}
+\@py@decl{pu}{p}{u}{}
+
+\@py@decl{qi}{q}{i}{}
+\@py@decl{qia}{qi}{a}{}
+\@py@decl{qian}{qi}{a}{n}
+\@py@decl{qiang}{qi}{a}{ng}
+\@py@decl{qiao}{qi}{a}{o}
+\@py@decl{qie}{qi}{e}{}
+\@py@decl{qin}{q}{i}{n}
+\@py@decl{qing}{q}{i}{ng}
+\@py@decl{qiong}{qi}{o}{ng}
+\@py@decl{qiu}{qi}{u}{}
+\@py@decl{qu}{q}{u}{}
+\@py@decl{quan}{qu}{a}{n}
+\@py@decl{que}{qu}{e}{}
+\@py@decl{qun}{q}{u}{n}
+
+\@py@decl{ran}{r}{a}{n}
+\@py@decl{rang}{r}{a}{ng}
+\@py@decl{rao}{r}{a}{o}
+\@py@decl{re}{r}{e}{}
+\@py@decl{ren}{r}{e}{n}
+\@py@decl{reng}{r}{e}{ng}
+\@py@decl{ri}{r}{i}{}
+\@py@decl{rong}{r}{o}{ng}
+\@py@decl{rou}{r}{o}{u}
+\@py@decl{ru}{r}{u}{}
+\@py@decl{rua}{ru}{a}{}
+\@py@decl{ruan}{ru}{a}{n}
+\@py@decl{rui}{ru}{i}{}
+\@py@decl{run}{r}{u}{n}
+\@py@decl{ruo}{ru}{o}{}
+
+\@py@decl{sa}{s}{a}{}
+\@py@decl{sai}{s}{a}{i}
+\@py@decl{san}{s}{a}{n}
+\@py@decl{sang}{s}{a}{ng}
+\@py@decl{sao}{s}{a}{o}
+\@py@decl{se}{s}{e}{}
+\@py@decl{sen}{s}{e}{n}
+\@py@decl{seng}{s}{e}{ng}
+\@py@decl{sha}{sh}{a}{}
+\@py@decl{shai}{sh}{a}{i}
+\@py@decl{shan}{sh}{a}{n}
+\@py@decl{shang}{sh}{a}{ng}
+\@py@decl{shao}{sh}{a}{o}
+\@py@decl{she}{sh}{e}{}
+\@py@decl{shei}{sh}{e}{i}
+\@py@decl{shen}{sh}{e}{n}
+\@py@decl{sheng}{sh}{e}{ng}
+\@py@decl{shi}{sh}{i}{}
+\@py@decl{shou}{sh}{o}{u}
+\@py@decl{shu}{sh}{u}{}
+\@py@decl{shua}{shu}{a}{}
+\@py@decl{shuai}{shu}{a}{i}
+\@py@decl{shuan}{shu}{a}{n}
+\@py@decl{shuang}{shu}{a}{ng}
+\@py@decl{shui}{shu}{i}{}
+\@py@decl{shun}{sh}{u}{n}
+\@py@decl{shuo}{shu}{o}{}
+\@py@decl{si}{s}{i}{}
+\@py@decl{song}{s}{o}{ng}
+\@py@decl{sou}{s}{o}{u}
+\@py@decl{su}{s}{u}{}
+\@py@decl{suan}{su}{a}{n}
+\@py@decl{sui}{su}{i}{}
+\@py@decl{sun}{s}{u}{n}
+\@py@decl{suo}{su}{o}{}
+
+\@py@decl{ta}{t}{a}{}
+\@py@decl{tai}{t}{a}{i}
+\@py@decl{tan}{t}{a}{n}
+\@py@decl{tang}{t}{a}{ng}
+\@py@decl{tao}{t}{a}{o}
+\@py@decl{te}{t}{e}{}
+\@py@decl{tei}{t}{e}{i}
+\@py@decl{teng}{t}{e}{ng}
+\@py@decl{ti}{t}{i}{}
+\@py@decl{tian}{ti}{a}{n}
+\@py@decl{tiao}{ti}{a}{o}
+\@py@decl{tie}{ti}{e}{}
+\@py@decl{ting}{t}{i}{ng}
+\@py@decl{tong}{t}{o}{ng}
+\@py@decl{tou}{t}{o}{u}
+\@py@decl{tu}{t}{u}{}
+\@py@decl{tuan}{tu}{a}{n}
+\@py@decl{tui}{tu}{i}{}
+\@py@decl{tun}{t}{u}{n}
+\@py@decl{tuo}{tu}{o}{}
+
+\@py@decl{wa}{w}{a}{}
+\@py@decl{wai}{w}{a}{i}
+\@py@decl{wan}{w}{a}{n}
+\@py@decl{wang}{w}{a}{ng}
+\@py@decl{wei}{w}{e}{i}
+\@py@decl{wen}{w}{e}{n}
+\@py@decl{weng}{w}{e}{ng}
+\@py@decl{wo}{w}{o}{}
+\@py@decl{wu}{w}{u}{}
+
+\@py@decl{xi}{x}{i}{}
+\@py@decl{xia}{xi}{a}{}
+\@py@decl{xian}{xi}{a}{n}
+\@py@decl{xiang}{xi}{a}{ng}
+\@py@decl{xiao}{xi}{a}{o}
+\@py@decl{xie}{xi}{e}{}
+\@py@decl{xin}{x}{i}{n}
+\@py@decl{xing}{x}{i}{ng}
+\@py@decl{xiong}{xi}{o}{ng}
+\@py@decl{xiu}{xi}{u}{}
+\@py@decl{xu}{x}{u}{}
+\@py@decl{xuan}{xu}{a}{n}
+\@py@decl{xue}{xu}{e}{}
+\@py@decl{xun}{x}{u}{n}
+
+\@py@decl{ya}{y}{a}{}
+\@py@decl{yan}{y}{a}{n}
+\@py@decl{yang}{y}{a}{ng}
+\@py@decl{yao}{y}{a}{o}
+\@py@decl{ye}{y}{e}{}
+\@py@decl{yi}{y}{i}{}
+\@py@decl{yin}{y}{i}{n}
+\@py@decl{ying}{y}{i}{ng}
+\@py@decl{yo}{y}{o}{}
+\@py@decl{yong}{y}{o}{ng}
+\@py@decl{you}{y}{o}{u}
+\@py@decl{yu}{y}{u}{}
+\@py@decl{yuan}{yu}{a}{n}
+\@py@decl{yue}{yu}{e}{}
+\@py@decl{yun}{y}{u}{n}
+
+\@py@decl{za}{z}{a}{}
+\@py@decl{zai}{z}{a}{i}
+\@py@decl{zan}{z}{a}{n}
+\@py@decl{zang}{z}{a}{ng}
+\@py@decl{zao}{z}{a}{o}
+\@py@decl{ze}{z}{e}{}
+\@py@decl{zei}{z}{e}{i}
+\@py@decl{zen}{z}{e}{n}
+\@py@decl{zeng}{z}{e}{ng}
+\@py@decl{zha}{zh}{a}{}
+\@py@decl{zhai}{zh}{a}{i}
+\@py@decl{zhan}{zh}{a}{n}
+\@py@decl{zhang}{zh}{a}{ng}
+\@py@decl{zhao}{zh}{a}{o}
+\@py@decl{zhe}{zh}{e}{}
+\@py@decl{zhei}{zh}{e}{i}
+\@py@decl{zhen}{zh}{e}{n}
+\@py@decl{zheng}{zh}{e}{ng}
+\@py@decl{zhi}{zh}{i}{}
+\@py@decl{zhong}{zh}{o}{ng}
+\@py@decl{zhou}{zh}{o}{u}
+\@py@decl{zhu}{zh}{u}{}
+\@py@decl{zhua}{zhu}{a}{}
+\@py@decl{zhuai}{zhu}{a}{i}
+\@py@decl{zhuan}{zhu}{a}{n}
+\@py@decl{zhuang}{zhu}{a}{ng}
+\@py@decl{zhui}{zhu}{i}{}
+\@py@decl{zhun}{zh}{u}{n}
+\@py@decl{zhuo}{zhu}{o}{}
+\@py@decl{zi}{z}{i}{}
+\@py@decl{zong}{z}{o}{ng}
+\@py@decl{zou}{z}{o}{u}
+\@py@decl{zu}{z}{u}{}
+\@py@decl{zuan}{zu}{a}{n}
+\@py@decl{zui}{zu}{i}{}
+\@py@decl{zun}{z}{u}{n}
+\@py@decl{zuo}{zu}{o}{}
+
+\def\@py@fontsize{\scriptsize}
+
+\def\@py@color{black}
+\def\@py@colorx{red}
+
+\def\@py@vowel#1#2{\ifthenelse{\equal{#1}{a}}{\@py@a{#2}}{\ifthenelse{\equal{#1}{o}}{\@py@o{#2}}{\ifthenelse{\equal{#1}{e}}{\@py@e{#2}}{\ifthenelse{\equal{#1}{i}}{\@py@i{#2}}{\ifthenelse{\equal{#1}{u}}{\@py@u{#2}}{\ifthenelse{\equal{#1}{v}}{\@py@v{#2}}{#1}}}}}}}
+
+\newlength{\@py@font@ht}
+\newlength{\@py@font@dp}
+\newlength{\@py@font@th}
+
+\def\setpyfont#1{%
+	\ifthen{\equal{\@py@font@changeable}{y}}{\ifthen{\not\equal{#1}{}}{%
+		\def\py@font{\expandafter\csname #1\endcsname}%
+		\settoheight{\@py@font@ht}{\@py@font\@py@fontsize hang}\settodepth{\@py@font@dp}{\@py@font\@py@fontsize hang}%
+		\setlength{\@py@font@th}{\@py@font@ht}\addtolength{\@py@font@th}{\@py@font@dp}%
+	}}%
+}
+\def\resetpyfont{\setpyfont{\expandafter\csname\@py@fontname\endcsname}}
+
+\def\setpyfontsize#1{%
+	\ifthen{\not\equal{#1}{}}{%
+		\def\@py@fontsize{\expandafter\csname #1\endcsname}%
+		\settoheight{\@py@font@ht}{\@py@font\@py@fontsize hang}\settodepth{\@py@font@dp}{\@py@font\@py@fontsize hang}%
+		\setlength{\@py@font@th}{\@py@font@ht}\addtolength{\@py@font@th}{\@py@font@dp}%
+	}%
+}%
+\def\resetpyfontsize{\setpyfontsize{scriptsize}}
+
+% initialize \@py@font@ht, \@py@font@dp and \@py@font@th
+\resetpyfontsize
+
+\def\setpycolor#1{%
+	\ifthen{\not\equal{#1}{}}{%
+		\def\@py@color{#1}%
+	}%
+}%
+\def\resetpycolor{\def\@py@color{black}}
+
+\def\setpycolorx#1{%
+	\ifthen{\not\equal{#1}{}}{%
+		\def\@py@colorx{#1}%
+	}%
+}%
+\def\resetpycolorx{\def\@py@colorx{black}}
+
+\newcommand\xepybegin[4]{%
+	\let\@py@font@bak\@py@font%
+	\let\@py@fontsize@bak\@py@fontsize%
+	\let\@py@color@bak\@py@color%
+	\let\@py@colorx@bak\@py@colorx%
+	\let\@py@font@ht@bak\@py@font@ht%
+	\let\@py@font@dp@bak\@py@font@dp%
+	\let\@py@font@th@bak\@py@font@th%
+	\setpyfont{#1}\setpyfontsize{#2}\setpycolor{#3}\setpycolorx{#4}%
+}
+
+\newcommand\xepyend{%
+	\let\@py@font\@py@font@bak%
+	\let\@py@fontsize\@py@fontsize@bak%
+	\let\@py@color\@py@color@bak%
+	\let\@py@colorx\@py@colorx@bak%
+	\let\@py@font@ht\@py@font@ht@bak%
+	\let\@py@font@dp\@py@font@dp@bak%
+	\let\@py@font@th\@py@font@th@bak%
+}
+
+\newenvironment{xepy}[4]{\xepybegin{#1}{#2}{#3}{#4}}{\xepyend}
+
+\def\@py@ccfont{\songti}
+\def\@py@ccfontsize{\Large}
+\def\@py@cccolor{black}
+
+\newlength{\@py@ccfont@wd}
+\newlength{\@py@ccfont@ht}
+\newlength{\@py@ccfont@dp}
+\newlength{\@py@ccfont@th}
+
+\def\setpyccfont#1{%
+	\ifthen{\not\equal{#1}{}}{%
+		\def\@py@ccfont{\expandafter\csname #1\endcsname}%
+		\settowidth{\@py@ccfont@wd}{\@py@ccfont\@py@ccfontsize 国}\settoheight{\@py@ccfont@ht}{\@py@ccfont\@py@ccfontsize 国}\settodepth{\@py@ccfont@dp}{\@py@ccfont\@py@ccfontsize 国}%
+		\setlength{\@py@ccfont@th}{\@py@ccfont@ht}\addtolength{\@py@ccfont@th}{\@py@ccfont@dp}%
+	}%
+}
+\def\resetpyccfont{\setpyccfont{\songti}}
+
+\def\setpyccfontsize#1{%
+	\ifthen{\not\equal{#1}{}}{%
+		\def\@py@ccfontsize{\expandafter\csname #1\endcsname}%
+		\settowidth{\@py@ccfont@wd}{\@py@ccfont\@py@ccfontsize 国}\settoheight{\@py@ccfont@ht}{\@py@ccfont\@py@ccfontsize 国}\settodepth{\@py@ccfont@dp}{\@py@ccfont\@py@ccfontsize 国}%
+		\setlength{\@py@ccfont@th}{\@py@ccfont@ht}\addtolength{\@py@ccfont@th}{\@py@ccfont@dp}%
+	}%
+}%
+\def\resetpyccfontsize{\setpyccfontsize{Large}}
+
+% initialize \@py@ccfont@wd, \@py@ccfont@ht, \@py@ccfont@dp and \@py@ccfont@th
+\resetpyccfontsize
+
+\def\setpycccolor#1{%
+	\ifthen{\not\equal{#1}{}}{%
+		\def\pycccolor{#1}%
+	}%
+}%
+\def\resetpycccolor{\setpycccolor{black}}
+
+\def\@py@isfirstzy{1}
+\def\resetzy{\def\@py@isfirstzy{1}}
+\def\@py@zysep{{\tiny\ }}
+\def\setzysep#1{\def\@py@zysep{{#1}}}
+\def\resetzysep{\def\@py@zysep{{\tiny\ }}}
+\def\@py@zysep@apply{\ifthenelse{\equal{\@py@isfirstzy}{1}}{}{\@py@zysep}}
+\def\@py@zyscale{1.2}
+\def\setzyscale#1{\def\@py@zyscale{#1}}
+\def\resetzyscale{\def\@py@zyscale{1.2}}
+
+\newcommand\zy{\@ifstar{\@py@zyx}{\@py@zy}}
+\newcommand\@py@zy[3][]{%
+\@py@zysep@apply{$%
+\overset{\mbox{\@py@font\@py@fontsize\color{\@py@color}\vphantom{l}#2\vphantom{g}}}%
+		{\makebox(\pts{\@py@zyscale\@py@ccfont@th},\pts{\@py@zyscale\@py@ccfont@th}){\@py@ccfont\@py@ccfontsize\color{\@py@cccolor}\ifthenelse{\equal{#1}{}}{#3}{\raisebox{#1}{#3}}}}%
+$}\def\@py@isfirstzy{0}%
+}
+
+\newcommand\@py@zyx[3][]{%
+\@py@zysep{$%
+\overset{\mbox{\@py@font\@py@fontsize\color{\@py@colorx}\vphantom{l}#2\vphantom{g}}}%
+		{\makebox(\pts{\@py@zyscale\@py@ccfont@th},\pts{\@py@zyscale\@py@ccfont@th}){\@py@ccfont\@py@ccfontsize\color{\@py@cccolor}\ifthenelse{\equal{#1}{}}{#3}{\raisebox{#1}{#3}}}}%
+$}\def\@py@isfirstzy{0}%
+}
+
+\def\zynone#1{#1}
+
+\def\zynl{\resetzy\newline}
+\def\zyni{\resetzy\noindent}
+\def\zynlz{\noexpand\resetzy\noexpand\newline}
+\def\zyniz{\noexpand\resetzy\noexpand\noindent}
+
+\def\@py@gridcolor{black}
+\def\setgridcolor#1{\def\@py@gridcolor{#1}}
+\def\resetgridcolor{\def\@py@gridcolor{black}}
+\def\@py@griddashcolor{darkgray}
+\def\setgriddashcolor#1{\def\@py@griddashcolor{#1}}
+\def\resetgriddashcolor{\def\@py@griddashcolor{darkgray}}
+\def\@py@gridccscale{1.2}
+\def\setgridccscale#1{\def\@py@gridccscale{#1}}
+\def\resetgridccscale{\def\@py@gridccscale{1.2}}
+\def\@py@gridcc@show@cc{true}
+\def\@py@gridcc@show@grid{true}
+
+\newlength{\@py@gridcc@width}
+\newlength{\@py@gridcc@height}
+\newlength{\@py@gridcc@depth}
+\newlength{\@py@gridcc@width@org}
+\newlength{\@py@gridcc@height@org}
+\newlength{\@py@gridcc@depth@org}
+\newlength{\@py@gridcc@baseline}
+
+\def\@py@gridccscale@apply#1#2{%
+\setlength{\@py@gridcc@width}{\@py@ccfont@wd}%
+\setlength{\@py@gridcc@height}{\@py@ccfont@ht}%
+\setlength{\@py@gridcc@depth}{\@py@ccfont@dp}%
+\setlength{\@py@gridcc@width@org}{\@py@gridcc@width}%
+\setlength{\@py@gridcc@height@org}{\@py@gridcc@height}%
+\setlength{\@py@gridcc@depth@org}{\@py@gridcc@depth}%
+\setlength{\@py@gridcc@width}{#2\@py@gridcc@width}%
+\setlength{\@py@gridcc@height}{#2\@py@gridcc@height}%
+\setlength{\@py@gridcc@depth}{#2\@py@gridcc@depth}%
+\setlength{\@py@gridcc@baseline}{#2\@py@gridcc@depth@org}%
+\addtolength{\@py@gridcc@baseline}{0.5\@py@gridcc@width}%
+\addtolength{\@py@gridcc@baseline}{-0.5\@py@gridcc@width@org}%
+}
+
+\def\gridcc#1{%
+\@py@gridccscale@apply{#1}{\@py@gridccscale}%
+\begin{tikzpicture}%
+\tikzset{baseline=\@py@gridcc@baseline}%
+\tikzset{inner sep=0pt}%
+\tikzset{outer sep=0pt}%
+\ifthen{\equal{\@py@gridcc@show@grid}{true}}{%
+\draw[\@py@gridcolor,line width=0.5pt] (0,0) rectangle (\@py@gridcc@width,\@py@gridcc@width);%
+\draw[\@py@griddashcolor,dotted] (0,0.5\@py@gridcc@width) -- (\@py@gridcc@width,0.5\@py@gridcc@width);%
+\draw[\@py@griddashcolor,dotted] (0.5\@py@gridcc@width,0) -- (0.5\@py@gridcc@width,\@py@gridcc@width);%
+\draw[\@py@griddashcolor,dotted] (0,0) -- (\@py@gridcc@width,\@py@gridcc@width);%
+\draw[\@py@griddashcolor,dotted] (0,\@py@gridcc@width) -- (\@py@gridcc@width,0);%
+}%
+\ifthen{\equal{\@py@gridcc@show@cc}{true}}{%
+\node at (0.5\@py@gridcc@width,0.5\@py@gridcc@width) {\@py@ccfont\@py@ccfontsize{}#1};%
+}%
+\end{tikzpicture}%
+}
+
+\def\@py@isfirstgzy{1}
+\def\resetgzy{\def\@py@isfirstgzy{1}}
+\def\@py@gzysep{{\tiny\ }}
+\def\setgzysep#1{\def\@py@gzysep{#1}}
+\def\resetgzysep{\def\@py@gzysep{{\tiny\ }}}
+\def\@py@gzyhscale{1.2}
+\def\@py@gzyvscale{1.3}
+\def\setgzyscale#1#2{\def\@py@gzyhscale{#1}\def\@py@gzyvscale{#2}}
+\def\resetgzyscale{\def\@py@gzyhscale{1.2}\def\@py@gzyvscale{1.3}}
+\def\@py@gzysep@apply{\ifthenelse{\equal{\@py@isfirstgzy}{1}}{}{\@py@gzysep}}
+
+\def\@py@gzy@show@py{true}
+
+\newcommand\gzy{\@ifstar{\@py@gzyx}{\@py@gzy}}
+\newcommand\@py@gzy[3][]{%
+\@py@gzysep@apply{$%
+\overset{\mbox{\@py@font\@py@fontsize\color{\@py@color}\vphantom{l}\ifthen{\equal{\@py@gzy@show@py}{true}}{#2}\vphantom{g}}}%
+        {\makebox(\pts{\@py@gzyhscale\@py@ccfont@wd},\pts{\@py@gzyvscale\@py@ccfont@wd}){\color{\@py@cccolor}\gridcc{\ifthenelse{\equal{#1}{}}{#3}{\raisebox{#1}{#3}}}}}%
+$}\def\@py@isfirstgzy{0}%
+}
+
+\newcommand\@py@gzyx[3][]{%
+\@py@gzysep@apply{$%e
+\overset{\mbox{\@py@font\@py@fontsize\color{\@py@colorx}\vphantom{l}\ifthen{\equal{\@py@gzy@show@py}{true}}{#2}\vphantom{g}}}%
+        {\makebox(\pts{\@py@gzyhscale\@py@ccfont@wd},\pts{\@py@gzyvscale\@py@ccfont@wd}){\color{\@py@cccolor}\gridcc{\ifthenelse{\equal{#1}{}}{#3}{\raisebox{#1}{#3}}}}}%
+$}\def\@py@isfirstgzy{0}%
+}
+
+\def\gzynl{\resetgzy\newline}
+\def\gzyni{\resetgzy\noindent}
+\def\gzynlz{\noexpand\resetgzy\noexpand\newline}
+\def\gzyniz{\noexpand\resetgzy\noexpand\noindent}
+
+\def\@py@endnote{}
+\def\endnote{\@py@endnote}
+\def\setendnote#1{\def\@py@endnote{#1}}
+\def\resetendnote{\def\@py@endnote{}}
+
+\def\zynotemark{\footnotemark}
+\def\zynotetext#1{\footnotetext{#1}}
+
+\def\@py@zypar@pyfont{simpofont}
+\def\@py@zypar@pysize{scriptsize}
+\def\@py@zypar@pycolor{gray}
+\def\@py@zypar@pycolorx{gray}
+\def\@py@zypar@ccfont{songti}
+\def\@py@zypar@ccsize{Large}
+\def\@py@zypar@cccolor{black}
+\define@key{@py@zypar@option}{pyfont}[simpofont]{\def\@py@zypar@pyfont{#1}}
+\define@key{@py@zypar@option}{pysize}[scriptsize]{\def\@py@zypar@pysize{#1}}
+\define@key{@py@zypar@option}{pycolor}[gray]{\def\@py@zypar@pycolor{#1}}
+\define@key{@py@zypar@option}{pycolorx}[gray]{\def\@py@zypar@pycolorx{#1}}
+\define@key{@py@zypar@option}{ccfont}[songti]{\def\@py@zypar@ccfont{#1}}
+\define@key{@py@zypar@option}{ccsize}[Large]{\def\@py@zypar@ccsize{#1}}
+\define@key{@py@zypar@option}{cccolor}[black]{\def\@py@zypar@cccolor{#1}}
+
+\def\zypar@shell{y}
+\newcommand\zypar{\@ifstar{\def\zypar@shell{n}\zypar@do}{\def\zypar@shell{y}\zypar@do}}
+\newcommand\zypar@do[3][]{{%
+\setkeys{@py@zypar@option}{#1}%
+\let\@py@endnote@bak\@py@endnote%
+\IfBeginWith{#2}{gezhu}{\def\@py@endnote{}\begin{withgezhu}}{\IfBeginWith{#2}{footnote}{\def\@py@endnote{。}}{}}%
+\xepybegin{\@py@zypar@pyfont}{\@py@zypar@pysize}{\@py@zypar@pycolor}{\@py@zypar@pycolorx}%
+\let\@py@ccfont@bak\@py@ccfont%
+\let\@py@ccfontsize@bak\@py@ccfontsize%
+\let\@py@ccfont@wd@bak\@py@ccfont@wd%
+\let\@py@ccfont@ht@bak\@py@ccfont@ht%
+\let\@py@ccfont@dp@bak\@py@ccfont@dp%
+\let\@py@ccfont@th@bak\@py@ccfont@th%
+\setpyccfont{\@py@zypar@ccfont}\setpyccfontsize{\@py@zypar@ccsize}\setpycccolor{\@py@zypar@cccolor}%
+\@py@ccfontsize%
+\setlength{\parindent}{2.5\@py@ccfont@wd}%
+\setlength{\baselineskip}{\@py@font@th}%
+\addtolength{\baselineskip}{\@py@ccfont@th}%
+\setlength{\baselineskip}{1.6\baselineskip}%
+\setlength{\parskip}{0.5\baselineskip}%
+\IfBeginWith{#2}{gezhu}{\setgezhuraise{0.15\@py@ccfont@th}\everygezhu{\fontsize{0.5\@py@ccfont@th}{0.6\@py@ccfont@th}\selectfont}}{}%
+\resetzy%
+\vspace{0.5\@py@ccfont@th}%
+\ifthenelse{\equal{\zypar@shell}{y}}{\xsinput{pytext -n '#2'}{#3}}{#3}%
+\vspace{0.5\@py@ccfont@th}%
+\let\@py@ccfont\@py@ccfont@bak%
+\let\@py@ccfontsize\@py@ccfontsize@bak%
+\let\@py@ccfont@wd\@py@ccfont@wd@bak%
+\let\@py@ccfont@ht\@py@ccfont@ht@bak%
+\let\@py@ccfont@dp\@py@ccfont@dp@bak%
+\let\@py@ccfont@th\@py@ccfont@th@bak%
+\xepyend%
+\IfBeginWith{#2}{gezhu}{\end{withgezhu}}{}%
+\let\@py@endnote\@py@endnote@bak%
+}}
+
+\def\@py@cizu@pyfont{simpofont}
+\def\@py@cizu@pysize{scriptsize}
+\def\@py@cizu@pycolor{gray}
+\def\@py@cizu@pycolorx{gray}
+\def\@py@cizu@ccfont{songti}
+\def\@py@cizu@ccsize{Large}
+\def\@py@cizu@cccolor{black}
+\def\@py@cizu@cc{true}
+\def\@py@cizu@grid{true}
+\def\@py@cizu@py{true}
+\def\@py@cizu@gridcolor{black}
+\def\@py@cizu@griddashcolor{darkgray}
+\def\@py@cizu@shelloption{}
+\define@key{@py@cizu@option}{pyfont}[simpofont]{\def\@py@cizu@pyfont{#1}}
+\define@key{@py@cizu@option}{pysize}[scriptsize]{\def\@py@cizu@pysize{#1}}
+\define@key{@py@cizu@option}{pycolor}[gray]{\def\@py@cizu@pycolor{#1}}
+\define@key{@py@cizu@option}{pycolorx}[gray]{\def\@py@cizu@pycolorx{#1}}
+\define@key{@py@cizu@option}{ccfont}[songti]{\def\@py@cizu@ccfont{#1}}
+\define@key{@py@cizu@option}{ccsize}[Large]{\def\@py@cizu@ccsize{#1}}
+\define@key{@py@cizu@option}{cccolor}[black]{\def\@py@cizu@cccolor{#1}}
+\define@key{@py@cizu@option}{cc}[true]{\def\@py@cizu@cc{#1}\def\@py@gridcc@show@cc{#1}}
+\define@key{@py@cizu@option}{grid}[true]{\def\@py@cizu@grid{#1}\def\@py@gridcc@show@grid{#1}}
+\define@key{@py@cizu@option}{py}[true]{\def\@py@cizu@py{#1}\def\@py@gzy@show@py{#1}}
+\define@key{@py@cizu@option}{gridcolor}[black]{\def\@py@cizu@gridcolor{#1}\def\@py@gridcolor{#1}}
+\define@key{@py@cizu@option}{griddashcolor}[black]{\def\@py@cizu@griddashcolor{#1}\def\@py@griddashcolor{#1}}
+\define@key{@py@cizu@option}{shelloption}[]{\def\@py@cizu@shelloption{#1}}
+
+\def\cizu@shell{y}
+\newcommand\cizu{\@ifstar{\def\cizu@shell{n}\cizu@do}{\def\cizu@shell{y}\cizu@do}}
+\newcommand\cizu@do[2][]{{%
+\let\@py@gridcolor@bak\@py@gridcolor%
+\let\@py@griddashcolor@bak\@py@griddashcolor%
+\let\@py@gridcc@show@grid@bak\@py@gridcc@show@grid%
+\let\@py@gridcc@show@cc@bak\@py@gridcc@show@cc%
+\let\@py@gzy@show@py@bak\@py@gzy@show@py%
+\let\@py@gzysep@bak\@py@gzysep%
+\setkeys{@py@cizu@option}{#1}%
+\setgzysep{}%
+\xepybegin{\@py@cizu@pyfont}{\@py@cizu@pysize}{\@py@cizu@pycolor}{\@py@cizu@pycolorx}%
+\let\@py@ccfont@bak\@py@ccfont%
+\let\@py@ccfontsize@bak\@py@ccfontsize%
+\let\@py@ccfont@wd@bak\@py@ccfont@wd%
+\let\@py@ccfont@ht@bak\@py@ccfont@ht%
+\let\@py@ccfont@dp@bak\@py@ccfont@dp%
+\let\@py@ccfont@th@bak\@py@ccfont@th%
+\setpyccfont{\@py@cizu@ccfont}\setpyccfontsize{\@py@cizu@ccsize}\setpycccolor{\@py@cizu@cccolor}%
+\@py@ccfontsize%
+\setlength{\parindent}{2.5\@py@ccfont@wd}%
+\setlength{\baselineskip}{\@py@font@th}%
+\addtolength{\baselineskip}{\@py@ccfont@th}%
+\setlength{\baselineskip}{1.6\baselineskip}%
+\setlength{\parskip}{0.5\baselineskip}%
+\resetgzy%
+\ifthenelse{\equal{\cizu@shell}{y}}{\xsinput{pytext -g \@py@cizu@shelloption}{#2}}{#2}%
+\let\@py@ccfont\@py@ccfont@bak%
+\let\@py@ccfontsize\@py@ccfontsize@bak%
+\let\@py@ccfont@wd\@py@ccfont@wd@bak%
+\let\@py@ccfont@ht\@py@ccfont@ht@bak%
+\let\@py@ccfont@dp\@py@ccfont@dp@bak%
+\let\@py@ccfont@th\@py@ccfont@th@bak%
+\xepyend%
+\let\@py@gridcolor\@py@gridcolor@bak%
+\let\@py@griddashcolor\@py@griddashcolor@bak%
+\let\@py@gridcc@show@grid\@py@gridcc@show@grid@bak%
+\let\@py@gridcc@show@cc\@py@gridcc@show@cc@bak%
+\let\@py@gzy@show@py\@py@gzy@show@py@bak%
+\let\@py@gzysep\@py@gzysep@bak%
+}}
+
+\endinput

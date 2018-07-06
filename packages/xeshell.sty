@@ -1,0 +1,44 @@
+% Read external program output.
+%
+% Version 1.0.0 (01-Jul-2018)
+%
+% Copyright (C) 2018 Sun Shouxiang <sunshouxiang@msn.com>
+
+\def\fileversion{1.0.0}
+\def\filedate{2018/07/01}
+\NeedsTeXFormat{LaTeX2e}[1995/06/01]
+\ProvidesPackage{xeshell}[\filedate\space\fileversion]
+
+\RequirePackage{ifxetex}\RequireXeTeX
+\RequirePackage{ifthen}
+
+\RequirePackage{ifplatform}
+
+%\newread\xs@inputstream
+\newwrite\xs@outputstream
+
+\newcommand\xs@file[1]{\jobname-#1}
+\newcommand\xs@exec[1]{\immediate\write18{#1}}
+\newcommand\xs@del[1]{\ifwindows\immediate\write18{del /y "#1"}\else\immediate\write18{rm -f "#1"}\fi}
+\newcommand\xs@cat[1]{\ifwindows\immediate\write18{type "#1"}\else\immediate\write18{cat "#1"}\fi}
+\newcommand\xs@cattofile[2]{\ifwindows\immediate\write18{type "#1" >> "#2"}\else\immediate\write18{cat "#1" >> "#2"}\fi}
+\newcommand\xs@save[2]{%
+  \immediate\openout\xs@outputstream=#1%
+  \immediate\write\xs@outputstream{#2}%
+  \immediate\closeout\xs@outputstream%
+}
+
+\def\xs@dbg{n}
+\newcommand\xsinput{\@ifstar{\def\xs@dbg{y}\xs@input}{\def\xs@dbg{n}\xs@input}}
+\newcommand\xs@input[2]{{%
+\ifshellescape{%
+\ifthenelse{\equal{\xs@dbg}{y}}{\typeout{#2}}{}%
+\xs@save{\xs@file{tmp.in}}{#2}%
+\input{|"#1 \xs@file{tmp.in}"}%
+%\xs@exec{#1 \xs@file{tmp.in} > \xs@file{tmp.out}}%
+%\input{\xs@file{tmp.out}}%
+\xs@del{\xs@file{tmp.in}}%
+}\else{\PackageError{xeshell}{Please run xelatex with option -shell-escape!}{}}\fi%
+}}
+
+\endinput

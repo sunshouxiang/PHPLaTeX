@@ -1,0 +1,115 @@
+% Enable well used Chinese/Japanese fonts.
+%
+% Version 1.0.0 (01-Jul-2018)
+%
+% Copyright (C) 2018 Sun Shouxiang <sunshouxiang@msn.com>
+
+\def\fileversion{1.0.0}
+\def\filedate{2018/07/01}
+\NeedsTeXFormat{LaTeX2e}[1995/06/01]
+\ProvidesPackage{xefonts}[\filedate\space\fileversion]
+
+\RequirePackage{ifxetex}\RequireXeTeX
+\RequirePackage{ifthen}
+
+\def\xf@mode@tt{truetype}
+\def\xf@mode@ot{opentype}
+\def\xf@mode{opentype}
+
+\DeclareOption{opentype}{\def\xf@mode{opentype}}
+\DeclareOption{truetype}{\def\xf@mode{truetype}}
+\ProcessOptions\relax
+
+\RequirePackage{fontspec}
+
+\def\xf@decl@font#1#2#3{
+\ifx\\#3\\
+	\expandafter\def\csname #1#2name\endcsname{}
+	\expandafter\def\csname #1#2\endcsname{\csname #1\endcsname}
+\else
+	\expandafter\def\csname #1#2name\endcsname{#3}
+	\expandafter\newfontfamily\csname #1#2\endcsname{\csname #1#2name\endcsname}
+\fi
+}
+
+\xf@decl@font{rm}{font}{LMRoman10-Regular}
+\xf@decl@font{it}{font}{LMRoman10-Italic}
+\xf@decl@font{tt}{font}{}
+\xf@decl@font{times}{font}{Times New Roman}
+\xf@decl@font{comic}{font}{Comic Sans MS}
+\xf@decl@font{simpo}{font}{Simplified Arabic}
+\xf@decl@font{segoe}{font}{Segoe UI}
+
+\def\xf@decl@font@cjk#1#2#3{
+	\expandafter\def\csname #1#2name\endcsname{#3}
+	\setCJKfamilyfont{#1#2}{#3}
+	\expandafter\def\csname #1#2\endcsname{\CJKfamily{#1#2}}
+}
+
+\def\xf@decl@font@cjk@vert#1#2#3{
+	\expandafter\def\csname #1#2name\endcsname{#3}
+	\setCJKfamilyfont{#1#2}[RawFeature={vertical:+vert:+cpct}]{#3}
+	\expandafter\def\csname #1#2\endcsname{\CJKfamily{#1#2}}
+}
+
+\ifx\xf@mode\xf@mode@ot
+
+	\xf@decl@font{esong}{ti}{Adobe Song Std}
+	\xf@decl@font{ehei}{ti}{Adobe Heiti Std}
+	\xf@decl@font{ekai}{ti}{Adobe Kaiti Std}
+	\xf@decl@font{efang}{ti}{Adobe Fangsong Std}
+	%\xf@decl@font{eming}{ti}{Adobe Ming Std}
+	\xf@decl@font{emincho}{}{Kozuka Mincho Std}
+	\xf@decl@font{egothic}{}{Kozuka Gothic Std}
+
+	\xf@decl@font@cjk{song}{ti}{Adobe Song Std}
+	\xf@decl@font@cjk{hei}{ti}{Adobe Heiti Std}
+	\xf@decl@font@cjk{kai}{ti}{Adobe Kaiti Std}
+	\xf@decl@font@cjk{fang}{ti}{Adobe Fangsong Std}
+	%\xf@decl@font@cjk{ming}{ti}{Adobe Ming Std}
+	\xf@decl@font@cjk{mincho}{}{Kozuka Mincho Std}
+	\xf@decl@font@cjk{gothic}{}{Kozuka Gothic Std}
+	%\xf@decl@font@cjk{phonetic}{}{Kingsoft Phonetic}
+
+	\xf@decl@font@cjk@vert{vsong}{ti}{Adobe Song Std}
+	\xf@decl@font@cjk@vert{vhei}{ti}{Adobe Heiti Std}
+	\xf@decl@font@cjk@vert{vkai}{ti}{Adobe Kaiti Std}
+	\xf@decl@font@cjk@vert{vfang}{ti}{Adobe Fangsong Std}
+	%\xf@decl@font@cjk@vert{vming}{ti}{Adobe Ming Std}
+	\xf@decl@font@cjk@vert{vmincho}{}{Kozuka Mincho Std}
+	\xf@decl@font@cjk@vert{vgothic}{}{Kozuka Gothic Std}
+
+\else
+
+	\xf@decl@font{esong}{ti}{SimSun}
+	\xf@decl@font{ehei}{ti}{SimHei}
+	\xf@decl@font{ekai}{ti}{KaiTi_GB2312}
+	\xf@decl@font{efang}{ti}{FangSong_GB2312}
+	%\xf@decl@font{eming}{ti}{Adobe Ming Std}
+	\xf@decl@font{emincho}{}{MS Mincho}
+	\xf@decl@font{egothic}{}{MS Gothic}
+
+	\xf@decl@font@cjk{song}{ti}{SimSun}
+	\xf@decl@font@cjk{hei}{ti}{SimHei}
+	\xf@decl@font@cjk{kai}{ti}{KaiTi_GB2312}
+	\xf@decl@font@cjk{fang}{ti}{FangSong_GB2312}
+	%\xf@decl@font@cjk{ming}{ti}{Adobe Ming Std}
+	\xf@decl@font@cjk{mincho}{}{MS Mincho}
+	\xf@decl@font@cjk{gothic}{}{MS Gothic}
+	%\xf@decl@font@cjk{phonetic}{}{Kingsoft Phonetic}
+
+	\xf@decl@font@cjk@vert{vsong}{ti}{SimSun}
+	\xf@decl@font@cjk@vert{vhei}{ti}{SimHei}
+	\xf@decl@font@cjk@vert{vkai}{ti}{KaiTi_GB2312}
+	\xf@decl@font@cjk@vert{vfang}{ti}{FangSong_GB2312}
+	%\xf@decl@font@cjk@vert{vming}{ti}{Adobe Ming Std}
+	\xf@decl@font@cjk@vert{vmincho}{}{MS Mincho}
+	\xf@decl@font@cjk@vert{vgothic}{}{MS Gothic}
+
+\fi
+
+\newcommand{\mainfonts}[2]{\ifthenelse{\not\equal{#1}{}}{\setmainfont{#1}}{}\ifthenelse{\not\equal{#2}{}}{\setCJKmainfont{#2}}{}}
+
+\mainfonts{\rmfontname}{\songtiname}
+
+\endinput
