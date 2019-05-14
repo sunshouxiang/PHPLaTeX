@@ -2,6 +2,85 @@
 
 Embed PHP snippets in LaTeX files to bring convenience of programming.
 
+## Setup
+
+### Install texlive packages
+
+    sudo apt-get install texlive
+    sudo apt-get install texlive-xetex
+    sudo apt-get install texlive-lang-cjk
+
+### Install fonts
+
+Collect and install following fonts.
+
+    /usr/local/share/fonts/opentype/adobe:
+        AdobeFangsongStd-Regular.otf
+        AdobeHeitiStd-Regular.otf
+        AdobeKaitiStd-Regular.otf
+        AdobeMingStd-Light.otf
+        AdobeMyungjoStd-Medium.otf
+        AdobeSongStd-Light.otf
+        HYQiHei-45S.otf
+        KozGoPr6N-Medium.otf
+        KozGoPro-Medium.otf
+        KozGoProVI-Medium.otf
+        KozGoStd-Bold.otf
+        KozGoStd-ExtraLight.otf
+        KozGoStd-Heavy.otf
+        KozGoStd-Light.otf
+        KozGoStd-Medium.otf
+        KozGoStd-Regular.otf
+        KozMinPr6N-Regular.otf
+        KozMinProVI-Regular.otf
+        KozMinStd-Bold.otf
+        KozMinStd-ExtraLight.otf
+        KozMinStd-Heavy.otf
+        KozMinStd-Light.otf
+        KozMinStd-Medium.otf
+        KozMinStd-Regular.otf
+        NeutraText-BookAlt.otf
+        NeutraText-DemiAlt.otf
+        NeutraText-LightAlt.otf
+
+    /usr/local/share/fonts/truetype/microsoft:
+        century.ttf
+        cour.ttf
+        courbd.ttf
+        courbi.ttf
+        couri.ttf
+        mriam.ttf
+        msgothic.ttc
+        msmincho.ttc
+        msyh.ttf
+        msyhbd.ttf
+        segoeui.ttf
+        simfang.ttf
+        simhei.ttf
+        simkai.ttf
+        simpo.ttf
+        simsun.ttc
+        times.ttf
+        timesbd.ttf
+        timesbi.ttf
+        timesi.ttf
+
+### Create local TeX ls-R database
+
+    ./setup.sh
+
+### Register path of executables
+
+In case of bash
+
+    TD=`pwd`
+    export PATH="${TD}/bin:${PATH}"
+
+In case of tcsh
+
+    TD=`pwd`
+    setenv PATH "${TD}/bin:${PATH}"
+
 ## Usage
 
     phplatex [options] texfile ...
